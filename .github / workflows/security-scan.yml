@@ -1,0 +1,81 @@
+name: Security Scan Pipeline
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      ####################################################
+      # Build hardened image
+      ####################################################
+      - name: Build hardened Docker image
+        run: docker build -f Dockerfile.hardened -t hardened-app:${{ github.sha }} .
+
+      ####################################################
+      # Trivy filesystem scan (Terraform + YAML + Dockerfiles)
+      ####################################################
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-fs-results.sarif
+
+      ####################################################
+      # Trivy image scan
+      ####################################################
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: hardened-app:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-image-results.sarif
+
+      ####################################################
+      # Upload Trivy results to GitHub Security tab
+      ####################################################
+      - name: Upload Trivy filesystem results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-fs-results.sarif
+
+      - name: Upload Trivy image results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-image-results.sarif
+
+      ####################################################
+      # Hadolint Dockerfile scan
+      ####################################################
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile.hardened
+
+      ####################################################
+      # Dockle container hardening scan
+      ####################################################
+      - name: Run Dockle
+        uses: erzz/dockle-action@v1
+        with:
+          image: hardened-app:${{ github.sha }}
+          exit-code: '1'
+          failure-threshold: WARN

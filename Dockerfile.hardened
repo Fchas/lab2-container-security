@@ -1,0 +1,18 @@
+FROM python:3.12-slim-bookworm
+
+# Create a user for security
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+
+WORKDIR /app
+
+# Copy requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy rest of code (replace with your actual Python app structure)
+COPY . .
+
+USER appuser
+
+# Replace with your API/monitor/ACME solver entrypoint
+CMD ["python", "-m", "api.main"]

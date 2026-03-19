@@ -1,0 +1,7 @@
+# Dockerfile.vulnerable
+FROM python:3.12-slim
+WORKDIR /app
+COPY app.py .
+RUN pip install --no-cache-dir flask==3.0.2
+CMD ["python", "app.py"]
+# Updated to resolve vulnerabilities in the base image and dependencies.

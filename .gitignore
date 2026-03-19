@@ -1,0 +1,43 @@
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfplan
+
+# Ignore tfvars with secrets
+*.tfvars
+!example.tfvars
+
+# Local override files
+override.tf
+override.tf.json
+
+# IDE/editor files
+*.swp
+*.swo
+
+# Kubernetes
+.kube/
+*.kubeconfig.yaml
+
+# Secrets
+registry-key.json
+
+# Binaries
+minikube-linux-amd64
+trivy
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars
+*.tfvars
+!example.tfvars
